@@ -10,6 +10,14 @@ const nextConfig = {
       crypto: false,
     };
     
+    // Handle WASM files for MediaPipe
+    if (!isServer) {
+      config.experiments = {
+        ...config.experiments,
+        asyncWebAssembly: true,
+      };
+    }
+    
     // Optimize file watching in development
     if (dev && !isServer) {
       config.watchOptions = {

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { BodyScanner, PoseLandmarks, BodyAnalysis } from '@/lib/bodyScanner';
 import { analyzeBody, generateDietPlan, generateWorkoutRoutine } from '@/lib/bodyAnalysis';
@@ -18,6 +20,9 @@ export default function BodyScanCamera() {
   const stablePoseStartRef = useRef<number>(0);
 
   useEffect(() => {
+    // Ensure we're in the browser
+    if (typeof window === 'undefined') return;
+    
     if (!videoRef.current || !canvasRef.current) return;
 
     const handlePoseResults = (landmarks: PoseLandmarks[]) => {
@@ -53,16 +58,30 @@ export default function BodyScanCamera() {
       }
     };
 
-    scannerRef.current = new BodyScanner(
-      videoRef.current,
-      canvasRef.current,
-      handlePoseResults
-    );
+    // Delay initialization slightly to ensure DOM is ready
+    const initTimer = setTimeout(async () => {
+      try {
+        if (!videoRef.current || !canvasRef.current) return;
+        
+        scannerRef.current = new BodyScanner(
+          videoRef.current,
+          canvasRef.current,
+          handlePoseResults
+        );
 
-    // Auto-start camera on mount
-    initializeCamera();
+        // Initialize MediaPipe first
+        await scannerRef.current.initialize();
+
+        // Auto-start camera on mount
+        await initializeCamera();
+      } catch (err: any) {
+        console.error('Error initializing BodyScanner:', err);
+        setError(`Failed to initialize scanner: ${err.message}`);
+      }
+    }, 300);
 
     return () => {
+      clearTimeout(initTimer);
       if (scannerRef.current) {
         scannerRef.current.stop();
       }
@@ -81,8 +100,21 @@ export default function BodyScanCamera() {
       });
 
       videoRef.current.srcObject = stream;
+      
+      // Wait for video to be ready
+      await new Promise((resolve) => {
+        if (videoRef.current) {
+          videoRef.current.onloadedmetadata = () => {
+            if (videoRef.current) {
+              videoRef.current.play();
+              resolve(undefined);
+            }
+          };
+        }
+      });
+
       if (scannerRef.current) {
-        scannerRef.current.start();
+        await scannerRef.current.start();
       }
     } catch (err: any) {
       setError(`Camera access denied: ${err.message}`);

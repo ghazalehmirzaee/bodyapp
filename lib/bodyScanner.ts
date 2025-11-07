@@ -26,7 +26,7 @@ export interface BodyAnalysis {
 }
 
 export class BodyScanner {
-  private pose: Pose;
+  private pose: Pose | null = null;
   private camera: Camera | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private canvasElement: HTMLCanvasElement | null = null;
@@ -37,36 +37,73 @@ export class BodyScanner {
   private lastPose: PoseLandmarks[] | null = null;
   private readonly SCAN_DURATION = 3000; // 3 seconds
   private readonly STABILITY_THRESHOLD = 0.1;
+  private initialized: boolean = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor(
     videoElement: HTMLVideoElement,
     canvasElement: HTMLCanvasElement,
     onResults: (landmarks: PoseLandmarks[]) => void
   ) {
+    // Ensure we're in the browser environment
+    if (typeof window === 'undefined') {
+      throw new Error('BodyScanner can only be used in the browser');
+    }
+
     this.videoElement = videoElement;
     this.canvasElement = canvasElement;
     this.onResults = onResults;
+  }
 
-    this.pose = new Pose({
-      locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-      },
-    });
+  async initialize(): Promise<void> {
+    if (this.initialized && this.pose) {
+      return;
+    }
 
-    this.pose.setOptions({
-      modelComplexity: 1,
-      smoothLandmarks: true,
-      enableSegmentation: false,
-      smoothSegmentation: false,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5,
-    });
+    if (this.initPromise) {
+      return this.initPromise;
+    }
 
-    this.pose.onResults(this.onPoseResults.bind(this));
+    this.initPromise = (async () => {
+      try {
+        // Wait a bit to ensure DOM and WASM are ready
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        this.pose = new Pose({
+          locateFile: (file) => {
+            // Use a more reliable CDN path
+            const baseUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose';
+            return `${baseUrl}/${file}`;
+          },
+        });
+
+        this.pose.setOptions({
+          modelComplexity: 1,
+          smoothLandmarks: true,
+          enableSegmentation: false,
+          smoothSegmentation: false,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+
+        this.pose.onResults(this.onPoseResults.bind(this));
+        
+        // Wait for pose to be fully initialized
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        this.initialized = true;
+      } catch (error) {
+        console.error('Error initializing MediaPipe Pose:', error);
+        this.initPromise = null;
+        throw error;
+      }
+    })();
+
+    return this.initPromise;
   }
 
   private onPoseResults(results: any) {
-    if (!this.canvasElement || !this.videoElement) return;
+    if (!this.canvasElement || !this.videoElement || !this.pose) return;
 
     const canvasCtx = this.canvasElement.getContext('2d');
     if (!canvasCtx) return;
@@ -152,12 +189,23 @@ export class BodyScanner {
     this.scanning = false;
   }
 
-  start() {
+  async start() {
     if (!this.videoElement) return;
+
+    // Ensure MediaPipe is initialized before starting
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    if (!this.pose) {
+      throw new Error('MediaPipe Pose not initialized');
+    }
 
     this.camera = new Camera(this.videoElement, {
       onFrame: async () => {
-        await this.pose.send({ image: this.videoElement! });
+        if (this.pose && this.videoElement) {
+          await this.pose.send({ image: this.videoElement });
+        }
       },
       width: 1280,
       height: 720,

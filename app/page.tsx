@@ -1,4 +1,9 @@
-import BodyScanCamera from '@/components/BodyScanCamera';
+import dynamic from 'next/dynamic';
+
+const BodyScanCamera = dynamic(() => import('@/components/BodyScanCamera'), {
+  ssr: false,
+  loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>Loading camera...</div>,
+});
 
 export default function Home() {
   return (
