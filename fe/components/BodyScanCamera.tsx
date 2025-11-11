@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { BodyScanner, PoseLandmarks, BodyAnalysis } from '@/lib/bodyScanner';
-import { analyzeBody, generateDietPlan, generateWorkoutRoutine } from '@/lib/bodyAnalysis';
+
+// Backend API URL - can be configured via environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function BodyScanCamera() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -122,22 +124,41 @@ export default function BodyScanCamera() {
     }
   };
 
-  const completeScan = (landmarks: PoseLandmarks[]) => {
+  const completeScan = async (landmarks: PoseLandmarks[]) => {
     setScanning(false);
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
     }
 
     try {
-      const bodyAnalysis = analyzeBody(landmarks);
-      const diet = generateDietPlan(bodyAnalysis);
-      const workout = generateWorkoutRoutine(bodyAnalysis);
+      // Call Python backend API for complete analysis
+      const response = await fetch(`${API_URL}/api/analyze-complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          landmarks: landmarks.map(lm => ({
+            x: lm.x,
+            y: lm.y,
+            z: lm.z,
+            visibility: lm.visibility,
+          })),
+        }),
+      });
 
-      setAnalysis(bodyAnalysis);
-      setDietPlan(diet);
-      setWorkoutRoutine(workout);
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      setAnalysis(data.analysis);
+      setDietPlan(data.dietPlan);
+      setWorkoutRoutine(data.workoutRoutine);
     } catch (err: any) {
-      setError(`Analysis failed: ${err.message}`);
+      setError(`Analysis failed: ${err.message}. Make sure the Python backend is running on ${API_URL}`);
+      console.error('Backend error:', err);
     }
   };
 
