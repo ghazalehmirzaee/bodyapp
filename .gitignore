@@ -21,6 +21,21 @@ logs/
 .env.local
 .env.*.local
 
+# Dependencies
+node_modules/
+fe/node_modules/
+be/__pycache__/
+be/*.pyc
+be/venv/
+be/env/
+
+# Build artifacts
+.next/
+fe/.next/
+out/
+dist/
+build/
+
 # Misc
 .cache/
 temp/
