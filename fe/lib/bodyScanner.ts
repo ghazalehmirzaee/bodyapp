@@ -57,26 +57,28 @@ export class BodyScanner {
 
   async initialize(): Promise<void> {
     if (this.initialized && this.pose) {
+      console.log('Already initialized');
       return;
     }
 
     if (this.initPromise) {
+      console.log('Init already in progress');
       return this.initPromise;
     }
 
     this.initPromise = (async () => {
       try {
-        // Wait a bit to ensure DOM and WASM are ready
-        await new Promise(resolve => setTimeout(resolve, 200));
-
+        console.log('Creating Pose instance...');
+        
         this.pose = new Pose({
           locateFile: (file) => {
-            // Use a more reliable CDN path
-            const baseUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose';
-            return `${baseUrl}/${file}`;
+            const url = `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`;
+            console.log('Loading file:', url);
+            return url;
           },
         });
 
+        console.log('Setting pose options...');
         this.pose.setOptions({
           modelComplexity: 1,
           smoothLandmarks: true,
@@ -86,14 +88,13 @@ export class BodyScanner {
           minTrackingConfidence: 0.5,
         });
 
+        console.log('Setting onResults callback...');
         this.pose.onResults(this.onPoseResults.bind(this));
         
-        // Wait for pose to be fully initialized
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
         this.initialized = true;
+        console.log('✅ MediaPipe Pose initialized successfully');
       } catch (error) {
-        console.error('Error initializing MediaPipe Pose:', error);
+        console.error('❌ Error initializing MediaPipe Pose:', error);
         this.initPromise = null;
         throw error;
       }

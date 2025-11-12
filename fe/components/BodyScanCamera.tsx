@@ -16,71 +16,101 @@ export default function BodyScanCamera() {
   const [dietPlan, setDietPlan] = useState<any>(null);
   const [workoutRoutine, setWorkoutRoutine] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(true);
+  const [showResults, setShowResults] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scanStartTimeRef = useRef<number>(0);
   const poseDetectedRef = useRef<boolean>(false);
   const stablePoseStartRef = useRef<number>(0);
+  const hasInitializedRef = useRef<boolean>(false);
+  const latestLandmarksRef = useRef<PoseLandmarks[] | null>(null);
 
   useEffect(() => {
-    // Ensure we're in the browser
-    if (typeof window === 'undefined') return;
+    console.log('▶️ useEffect running...');
     
-    if (!videoRef.current || !canvasRef.current) return;
+    // Ensure we're in the browser
+    if (typeof window === 'undefined') {
+      console.error('❌ Not in browser environment');
+      return;
+    }
+    
+    if (!videoRef.current || !canvasRef.current) {
+      console.error('❌ Video or canvas refs not ready');
+      setDebugInfo('Error: Video elements not ready');
+      return;
+    }
+    
+    // Only run once on mount - check inside timer to avoid React Strict Mode issues
+    if (hasInitializedRef.current) {
+      console.log('⚠️ Already initialized, skipping');
+      return;
+    }
+    
+    console.log('✅ Refs are ready, will initialize...');
 
     const handlePoseResults = (landmarks: PoseLandmarks[]) => {
-      if (analysis) return; // Don't process if already have results
-
-      // Auto-start scanning when pose is detected and stable
+      // Store latest landmarks for manual capture
+      latestLandmarksRef.current = landmarks;
+      
+      // Update debug info based on detection
       if (landmarks && landmarks.length >= 33) {
-        if (!poseDetectedRef.current) {
-          poseDetectedRef.current = true;
-          stablePoseStartRef.current = Date.now();
-          setScanning(true);
-          scanStartTimeRef.current = Date.now();
-        }
-
-        // Track progress during stable pose
-        const elapsed = Date.now() - stablePoseStartRef.current;
-        const progress = Math.min(100, (elapsed / 3000) * 100);
-        setScanProgress(progress);
-
-        // Complete scan after 3 seconds of stable pose
-        if (elapsed >= 3000) {
-          completeScan(landmarks);
-        }
+        setDebugInfo(`✅ Body detected! ${landmarks.length} landmarks. Ready to capture.`);
+      } else if (landmarks && landmarks.length > 0) {
+        setDebugInfo(`⚠️ Partial detection (${landmarks.length} landmarks). Show more of your body.`);
       } else {
-        // Reset if pose is lost
-        poseDetectedRef.current = false;
-        stablePoseStartRef.current = 0;
-        setScanning(false);
-        setScanProgress(0);
-        if (progressIntervalRef.current) {
-          clearInterval(progressIntervalRef.current);
-        }
+        setDebugInfo('👤 No body detected. Step into frame.');
       }
     };
 
     // Delay initialization slightly to ensure DOM is ready
     const initTimer = setTimeout(async () => {
+      // Mark as initialized at the START of initialization
+      if (hasInitializedRef.current) {
+        console.log('⚠️ Timer fired but already initialized, aborting');
+        return;
+      }
+      hasInitializedRef.current = true;
+      
       try {
-        if (!videoRef.current || !canvasRef.current) return;
+        console.log('🚀 Starting initialization...');
+        setDebugInfo('Initializing camera...');
         
+        if (!videoRef.current || !canvasRef.current) {
+          console.error('Video or canvas ref not available');
+          setError('Video elements not ready');
+          return;
+        }
+        
+        console.log('📹 Creating BodyScanner...');
         scannerRef.current = new BodyScanner(
           videoRef.current,
           canvasRef.current,
           handlePoseResults
         );
 
-        // Initialize MediaPipe first
+        console.log('🤖 Initializing MediaPipe...');
+        setDebugInfo('Loading MediaPipe AI model...');
+        
         await scannerRef.current.initialize();
 
-        // Auto-start camera on mount
+        console.log('📷 Starting camera...');
+        setDebugInfo('Starting camera...');
         await initializeCamera();
+        
+        console.log('✅ Initialization complete!');
+        setDebugInfo('Camera ready. Position yourself in frame.');
       } catch (err: any) {
-        console.error('Error initializing BodyScanner:', err);
+        console.error('❌ Error initializing BodyScanner:', err);
+        console.error('Full error details:', err);
         setError(`Failed to initialize scanner: ${err.message}`);
+        setDebugInfo(`Error: ${err.message}`);
+        hasInitializedRef.current = false; // Reset on error
       }
-    }, 300);
+    }, 500);
+    
+    console.log('⏱️ Initialization timer set for 500ms');
 
     return () => {
       clearTimeout(initTimer);
@@ -90,17 +120,29 @@ export default function BodyScanCamera() {
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
+      // Clean up camera stream
+      stopCameraStream();
     };
-  }, [scanning, analysis]);
+  }, []); // Empty dependencies - run only once on mount
+
+  const stopCameraStream = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
 
   const initializeCamera = async () => {
     try {
       if (!videoRef.current) return;
 
+      console.log('📹 Requesting camera access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 1280, height: 720, facingMode: 'user' },
       });
 
+      console.log('✅ Camera access granted');
       videoRef.current.srcObject = stream;
       
       // Wait for video to be ready
@@ -108,6 +150,7 @@ export default function BodyScanCamera() {
         if (videoRef.current) {
           videoRef.current.onloadedmetadata = () => {
             if (videoRef.current) {
+              console.log('📹 Video metadata loaded, starting playback...');
               videoRef.current.play();
               resolve(undefined);
             }
@@ -115,22 +158,33 @@ export default function BodyScanCamera() {
         }
       });
 
+      console.log('🎬 Starting pose detection...');
       if (scannerRef.current) {
         await scannerRef.current.start();
+        console.log('✅ Pose detection started successfully');
+        setDebugInfo('Detecting pose... Position your full body in frame.');
       }
     } catch (err: any) {
+      console.error('❌ Camera error:', err);
       setError(`Camera access denied: ${err.message}`);
-      console.error('Camera error:', err);
+      setDebugInfo(`Camera error: ${err.message}`);
     }
   };
 
-  const completeScan = async (landmarks: PoseLandmarks[]) => {
-    setScanning(false);
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
+  const handleCaptureAndAnalyze = async () => {
+    if (!latestLandmarksRef.current || latestLandmarksRef.current.length < 20) {
+      setError('No body detected. Please position yourself in the camera frame.');
+      return;
     }
 
+    const landmarksToSend = latestLandmarksRef.current;
+
+    setIsAnalyzing(true);
+    setDebugInfo('📸 Capturing and analyzing...');
+
     try {
+      console.log('📸 Capturing frame with', landmarksToSend.length, 'landmarks');
+      
       // Call Python backend API for complete analysis
       const response = await fetch(`${API_URL}/api/analyze-complete`, {
         method: 'POST',
@@ -138,7 +192,7 @@ export default function BodyScanCamera() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          landmarks: landmarks.map(lm => ({
+          landmarks: landmarksToSend.map(lm => ({
             x: lm.x,
             y: lm.y,
             z: lm.z,
@@ -152,63 +206,81 @@ export default function BodyScanCamera() {
       }
 
       const data = await response.json();
+      console.log('✅ Analysis complete:', data);
 
+      // Set all data immediately
       setAnalysis(data.analysis);
       setDietPlan(data.dietPlan);
       setWorkoutRoutine(data.workoutRoutine);
+      setIsAnalyzing(false);
+
+      // Stop camera and scanner immediately
+      if (scannerRef.current) {
+        scannerRef.current.stop();
+      }
+      stopCameraStream();
+
+      // Transition UI
+      setShowCamera(false);
+      
+      // Small delay to let camera fade out, then show results
+      setTimeout(() => {
+        setShowResults(true);
+        // Scroll to top to ensure results are visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 600);
     } catch (err: any) {
       setError(`Analysis failed: ${err.message}. Make sure the Python backend is running on ${API_URL}`);
       console.error('Backend error:', err);
+      setIsAnalyzing(false);
+      setDebugInfo('❌ Analysis failed. Check console for details.');
     }
   };
 
   return (
-    <div className="container">
-      <div className="camera-section">
-        <div className="video-container">
-          <video
-            ref={videoRef}
-            className="video"
-            autoPlay
-            playsInline
-            muted
-          />
-          <canvas ref={canvasRef} className="canvas" />
-          {scanning && (
-            <div className="scan-overlay">
-              <div className="scan-progress-bar">
-                <div
-                  className="scan-progress-fill"
-                  style={{ width: `${scanProgress}%` }}
-                />
+    <div className={`container ${!showCamera ? 'camera-hidden' : ''}`}>
+      {showCamera && (
+        <div className={`camera-section ${showCamera ? 'fade-in' : 'fade-out'}`}>
+          <div className="video-container fullscreen">
+            <video
+              ref={videoRef}
+              className="video"
+              autoPlay
+              playsInline
+              muted
+            />
+            <canvas ref={canvasRef} className="canvas" />
+            {scanning && (
+              <div className="scan-overlay">
+                <div className="scan-progress-bar">
+                  <div
+                    className="scan-progress-fill"
+                    style={{ width: `${scanProgress}%` }}
+                  />
+                </div>
+                <p className="scan-text">
+                  Scanning... Keep steady for {Math.max(0, Math.ceil((3000 - (Date.now() - stablePoseStartRef.current)) / 1000))}s
+                </p>
               </div>
-              <p className="scan-text">
-                Scanning... Keep steady for {Math.max(0, Math.ceil((3000 - (Date.now() - stablePoseStartRef.current)) / 1000))}s
-              </p>
-            </div>
-          )}
+            )}
+            {!analysis && (
+              <div className="instruction-overlay">
+                <p className="instruction-text">Position yourself in front of the camera</p>
+                <p className="debug-text">{debugInfo}</p>
+                <button 
+                  onClick={handleCaptureAndAnalyze}
+                  disabled={isAnalyzing || !latestLandmarksRef.current || latestLandmarksRef.current.length < 20}
+                  className="capture-button"
+                >
+                  {isAnalyzing ? '⏳ Analyzing...' : '📸 Capture & Analyze'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="controls">
-          {scanning && (
-            <button
-              onClick={() => {
-                setScanning(false);
-                if (progressIntervalRef.current) {
-                  clearInterval(progressIntervalRef.current);
-                }
-              }}
-              className="cancel-button"
-            >
-              Cancel Scan
-            </button>
-          )}
-          {!scanning && !analysis && (
-            <p className="instruction-text">Position yourself in front of the camera. Scanning will start automatically...</p>
-          )}
-        </div>
-      </div>
+      )}
 
-          {error && (
+      {error && (
         <div className="error-message">
           <p>{error}</p>
           <button onClick={initializeCamera} className="retry-button">
@@ -217,7 +289,7 @@ export default function BodyScanCamera() {
         </div>
       )}
 
-      {analysis && (
+      {showResults && analysis && (
         <div className="results-section">
           <h2>Body Composition Analysis</h2>
 
@@ -297,17 +369,29 @@ export default function BodyScanCamera() {
           )}
 
           <button
-            onClick={() => {
+            onClick={async () => {
+              // Reset all states
               setAnalysis(null);
               setDietPlan(null);
               setWorkoutRoutine(null);
               setScanning(false);
               setScanProgress(0);
+              setShowResults(false);
+              setIsAnalyzing(false);
+              setError(null);
               poseDetectedRef.current = false;
               stablePoseStartRef.current = 0;
+              latestLandmarksRef.current = null;
               if (progressIntervalRef.current) {
                 clearInterval(progressIntervalRef.current);
               }
+              
+              // Show camera again
+              setShowCamera(true);
+              setDebugInfo('Restarting camera...');
+              
+              // Restart camera
+              await initializeCamera();
             }}
             className="scan-again-button"
           >
@@ -320,28 +404,46 @@ export default function BodyScanCamera() {
         .container {
           max-width: 1200px;
           margin: 0 auto;
+          padding: 0;
+          transition: padding 0.5s ease;
+        }
+
+        .container.camera-hidden {
           padding: 20px;
         }
 
         .camera-section {
-          margin-bottom: 30px;
+          margin-bottom: 0;
+          animation: fadeIn 0.5s ease-in;
+        }
+
+        .camera-section.fade-out {
+          animation: fadeOut 0.5s ease-out forwards;
         }
 
         .video-container {
           position: relative;
           width: 100%;
-          max-width: 1280px;
-          margin: 0 auto;
           background: #000;
-          border-radius: 10px;
           overflow: hidden;
+        }
+
+        .video-container.fullscreen {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          z-index: 1000;
+          border-radius: 0;
         }
 
         .video,
         .canvas {
           width: 100%;
-          height: auto;
+          height: 100%;
           display: block;
+          object-fit: cover;
         }
 
         .canvas {
@@ -350,49 +452,139 @@ export default function BodyScanCamera() {
           left: 0;
         }
 
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes fadeOut {
+          from {
+            opacity: 1;
+            transform: scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+        }
+
         .scan-overlay {
           position: absolute;
-          bottom: 20px;
+          bottom: 40px;
           left: 50%;
           transform: translateX(-50%);
           background: rgba(0, 0, 0, 0.8);
           color: white;
-          padding: 15px 30px;
-          border-radius: 10px;
+          padding: 20px 40px;
+          border-radius: 15px;
           text-align: center;
-          min-width: 300px;
+          min-width: 350px;
+          backdrop-filter: blur(10px);
+          animation: slideUp 0.5s ease-out;
+        }
+
+        .instruction-overlay {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 30px 50px;
+          border-radius: 20px;
+          text-align: center;
+          max-width: 600px;
+          backdrop-filter: blur(10px);
+          animation: fadeIn 1s ease-in;
+        }
+
+        .instruction-text {
+          color: white;
+          font-size: 24px;
+          font-weight: 500;
+          margin: 0 0 15px 0;
+          line-height: 1.5;
+        }
+
+        .debug-text {
+          color: #4CAF50;
+          font-size: 16px;
+          font-weight: 400;
+          margin: 0 0 20px 0;
+          padding: 10px 20px;
+          background: rgba(76, 175, 80, 0.2);
+          border-radius: 8px;
+          border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .capture-button {
+          background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+          color: white;
+          border: none;
+          padding: 18px 50px;
+          font-size: 20px;
+          font-weight: 700;
+          border-radius: 50px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 8px 30px rgba(76, 175, 80, 0.6);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .capture-button:hover:not(:disabled) {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 40px rgba(76, 175, 80, 0.8);
+          background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
+        }
+
+        .capture-button:active:not(:disabled) {
+          transform: translateY(-1px);
+        }
+
+        .capture-button:disabled {
+          background: linear-gradient(135deg, #999 0%, #666 100%);
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
         }
 
         .scan-progress-bar {
           width: 100%;
-          height: 8px;
+          height: 10px;
           background: rgba(255, 255, 255, 0.3);
-          border-radius: 4px;
+          border-radius: 5px;
           overflow: hidden;
-          margin-bottom: 10px;
+          margin-bottom: 15px;
         }
 
         .scan-progress-fill {
           height: 100%;
           background: linear-gradient(90deg, #4CAF50, #8BC34A);
           transition: width 0.1s linear;
+          box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
         }
 
         .scan-text {
           margin: 0;
-          font-size: 16px;
+          font-size: 18px;
           font-weight: 600;
-        }
-
-        .controls {
-          text-align: center;
-          margin-top: 20px;
-        }
-
-        .instruction-text {
-          color: #666;
-          font-size: 16px;
-          font-style: italic;
         }
 
         .scan-button,
@@ -437,6 +629,18 @@ export default function BodyScanCamera() {
 
         .results-section {
           margin-top: 40px;
+          animation: slideInFromBottom 0.6s ease-out;
+        }
+
+        @keyframes slideInFromBottom {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .results-section h2 {
@@ -459,6 +663,42 @@ export default function BodyScanCamera() {
           padding: 25px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
           transition: transform 0.2s;
+          animation: cardFadeIn 0.5s ease-out backwards;
+        }
+
+        .result-card:nth-child(1) {
+          animation-delay: 0.1s;
+        }
+
+        .result-card:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .result-card:nth-child(3) {
+          animation-delay: 0.3s;
+        }
+
+        .result-card:nth-child(4) {
+          animation-delay: 0.4s;
+        }
+
+        .diet-plan {
+          animation-delay: 0.5s !important;
+        }
+
+        .workout-routine {
+          animation-delay: 0.6s !important;
+        }
+
+        @keyframes cardFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .result-card:hover {
@@ -466,11 +706,11 @@ export default function BodyScanCamera() {
         }
 
         .result-card h3 {
-          color: #667eea;
+          color: #4CAF50;
           margin-top: 0;
           margin-bottom: 15px;
           font-size: 22px;
-          border-bottom: 2px solid #667eea;
+          border-bottom: 2px solid #4CAF50;
           padding-bottom: 10px;
         }
 
@@ -525,11 +765,12 @@ export default function BodyScanCamera() {
 
         .workout-focus {
           font-size: 18px;
-          color: #667eea;
+          color: #4CAF50;
           margin-bottom: 20px;
           padding: 15px;
-          background: #f0f4ff;
+          background: rgba(76, 175, 80, 0.1);
           border-radius: 10px;
+          border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         .workout-day {
@@ -540,13 +781,20 @@ export default function BodyScanCamera() {
         }
 
         .workout-day h4 {
-          color: #667eea;
+          color: #4CAF50;
           margin-top: 0;
         }
 
         .scan-again-button {
           display: block;
           margin: 30px auto 0;
+          background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+          box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .scan-again-button:hover {
+          box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+          background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
         }
       `}</style>
     </div>
