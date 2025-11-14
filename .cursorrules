@@ -1,0 +1,248 @@
+# BodyApp Development Rules - STRICT ENFORCEMENT
+
+## Critical Rules (NEVER VIOLATE)
+
+### 1. File Length Limit
+- **MAXIMUM 1000 lines per file**
+- If ANY file exceeds 1000 lines:
+  - STOP all other work immediately
+  - Refactor the file into smaller modules
+  - Move code to appropriate folders
+  - Resume work only after refactoring is complete
+
+### 2. Markdown File Policy
+- **ONLY ONE README.md allowed in root folder**
+- Optional: One README in backend folder, one in frontend folder
+- **NEVER create**:
+  - QUICK_START.md
+  - MVP_WORKFLOW.md
+  - IMPLEMENTATION_SUMMARY.md
+  - CONTRIBUTING.md
+  - CHANGELOG.md
+  - Or ANY other markdown files
+- All documentation goes in the single root README.md
+- Updates must be in README.md, not new files
+- If you need to show documentation, output it as rich text in chat
+
+### 3. Root Folder Policy
+- **ONLY these files allowed in root**:
+  - README.md
+  - requirements.txt (Python dependencies)
+  - package.json (if needed for project-wide scripts)
+  - .gitignore
+  - .cursorrules
+  - .env (or .env.example)
+  - Start scripts (start.sh, start.bat)
+- **EVERYTHING else** must be in proper subfolders
+
+## Backend Structure Rules
+
+### Folder Organization
+```
+be/
+├── api/              # All API endpoints (routers)
+│   ├── __init__.py
+│   ├── physique.py   # Physique analysis endpoints
+│   ├── users.py      # User management endpoints
+│   └── health.py     # Health check endpoints
+├── services/         # Business logic
+│   ├── __init__.py
+│   ├── scoring.py    # Scoring algorithms
+│   └── analysis.py   # Analysis services
+├── models/           # Database models
+│   ├── __init__.py
+│   ├── user.py
+│   └── scan.py
+├── database/         # Database layer
+│   ├── __init__.py
+│   ├── connection.py
+│   └── repositories.py
+├── utils/            # Utility functions
+│   ├── __init__.py
+│   └── validation.py
+├── tests/            # All tests
+│   ├── __init__.py
+│   └── test_*.py
+├── config.py         # Configuration
+└── main.py           # ONLY app initialization and router registration
+```
+
+### Backend main.py Rules
+- **ONLY contains**:
+  - App initialization
+  - CORS setup
+  - Router registration
+  - Startup/shutdown events
+- **MAXIMUM 200 lines**
+- **NO endpoint definitions** (all in api/ folder)
+- **NO business logic** (all in services/ folder)
+
+## Frontend Structure Rules
+
+### Folder Organization
+```
+fe/
+├── app/              # Next.js app router
+├── components/       # React components (max 300 lines each)
+├── lib/              # Utilities and helpers
+├── services/         # API calls and business logic
+├── hooks/            # Custom React hooks
+├── types/            # TypeScript types
+└── styles/           # Global styles
+```
+
+### Component Rules
+- Each component: **MAXIMUM 300 lines**
+- If larger, split into sub-components
+- Keep logic in hooks or services
+
+## General Code Quality Rules
+
+### Modularity
+- Every file must have a single, clear responsibility
+- If a file does multiple things, split it
+- Prefer many small files over few large files
+
+### Naming Conventions
+- Files: snake_case.py (Python), kebab-case.tsx (TypeScript)
+- Classes: PascalCase
+- Functions: snake_case (Python), camelCase (TypeScript)
+- Constants: UPPER_CASE
+
+### Import Organization
+- Standard library imports first
+- Third-party imports second
+- Local imports last
+- Alphabetically sorted within each group
+
+## Refactoring Triggers
+
+### Immediate Refactoring Required When:
+1. Any file exceeds 1000 lines
+2. A function exceeds 100 lines
+3. More than 3 levels of nesting
+4. Duplicate code appears in 3+ places
+5. main.py contains endpoint definitions
+
+### Refactoring Process:
+1. Stop current work
+2. Create new files in appropriate folders
+3. Move code to new files
+4. Update imports
+5. Test that everything works
+6. Continue with original task
+
+## Documentation Rules
+
+### README.md Structure (ONLY file for docs)
+```markdown
+# BodyApp
+
+## Quick Start
+- How to install dependencies
+- How to start backend
+- How to start frontend
+- How to run tests
+
+## Project Structure
+- Overview of folders
+- Tech stack
+
+## Main Workflow
+- User flow through the app
+- API endpoints overview
+
+## Development
+- Code organization philosophy
+- How to add new features
+- Testing strategy
+
+## Deployment
+- How to deploy
+```
+
+### Code Comments
+- Use docstrings for all functions/classes
+- Explain WHY, not WHAT
+- Keep comments up to date
+
+## Technology Stack
+
+### Backend
+- FastAPI (web framework)
+- SQLAlchemy (ORM)
+- SQLite (database for MVP, PostgreSQL later)
+- Pydantic (validation)
+
+### Frontend  
+- Next.js 14 (React framework)
+- TypeScript (type safety)
+- MediaPipe (pose detection)
+
+## Testing Rules
+
+- Every service function must have tests
+- Tests in be/tests/ or fe/tests/
+- Filename: test_[module_name].py
+- Run tests before committing
+
+## Error Handling
+
+- All API endpoints must have try-catch
+- Return user-friendly error messages
+- Log errors for debugging
+- Never expose internal errors to users
+
+## Performance Rules
+
+- Database queries: Add indexes for frequent queries
+- Frontend: Use React.memo for expensive components
+- API: Async/await for I/O operations
+- Images: Compress before storing
+
+## Security Rules
+
+- Never commit API keys or secrets
+- Use environment variables
+- Validate all user inputs
+- Sanitize database queries
+
+## Git Rules
+
+- Commit often, small commits
+- Clear commit messages
+- Don't commit large files
+- Keep .gitignore updated
+
+## Design System
+
+### Color Palette (STRICT - NEVER VIOLATE)
+- **Primary Green**: `#2E7D32` or `#388E3C` (plant leaf green - not too dark, not avocado)
+- **Primary Black**: `#000000` or `#1a1a1a` (predominant background color)
+- **Accent Gray**: `#e0e0e0` or `#bdbdbd` (light gray for workout/active elements)
+- **Success Green**: `#4CAF50` (for positive actions)
+- **Warning Orange**: `#FF9800` (for attention)
+- **Error Red**: `#f44336` (for errors only)
+
+### NEVER USE:
+- ❌ Purple (`#667eea`, `#764ba2`) - WRONG
+- ❌ Rainbow colors
+- ❌ Bright/neon colors
+
+### Gradients
+- Primary: `linear-gradient(135deg, #2E7D32 0%, #1b5e20 100%)`
+- Workout: `linear-gradient(135deg, #424242 0%, #212121 100%)`
+
+## Summary
+
+**The Philosophy:**
+- Small, focused files
+- Clear folder structure  
+- Single README.md
+- Modular, testable code
+- Refactor before it's too late
+- Consistent dark green + black color scheme
+
+**The Golden Rule:**
+If you're about to create a 1000+ line file or a new markdown file, STOP and refactor first.
+
