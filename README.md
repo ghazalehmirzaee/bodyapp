@@ -1,388 +1,446 @@
-# Body Composition Scanner
+# BodyApp - AI-Powered Body Analysis
 
-AI-powered body composition analysis application with personalized diet plans and workout routines.
+**Under 90 seconds. Every day. Zero friction.**
 
-## 🏗️ Project Structure
-
-This project is split into two main parts:
-
-```
-bodyapp/
-├── be/          # Backend - Python FastAPI
-└── fe/          # Frontend - Next.js + React
-```
-
-### Backend (`be/`)
-- **Language**: Python 3.8+
-- **Framework**: FastAPI
-- **Features**: Body analysis algorithms, diet planning, workout generation
-- **Port**: 8000
-
-### Frontend (`fe/`)
-- **Language**: TypeScript
-- **Framework**: Next.js 13 + React 18
-- **Features**: Camera interface, pose detection (MediaPipe), results visualization
-- **Port**: 3000
-
-## ⚡ Quick Start
-
-### Prerequisites
-- **Python 3.8+** with pip
-- **Node.js 12.22.9+** (Node 16+ recommended)
-- **Webcam** for body scanning
-
-### 🚀 Fastest Way (Automated Scripts)
-
-**Windows:**
-```bash
-start.bat
-```
-Double-click `start.bat` or run it from command prompt. It will automatically:
-- Set up Python virtual environment
-- Install all dependencies
-- Start both backend and frontend servers in separate windows
-
-**Linux/macOS:**
-```bash
-chmod +x start.sh
-./start.sh
-```
-The script will handle everything automatically!
-
-### 📋 Manual Setup (If Scripts Don't Work)
-
-#### 1. Start the Backend (Terminal 1)
-
-```bash
-# Navigate to backend
-cd be
-
-# Create virtual environment (recommended)
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-python main.py
-```
-
-✅ Backend will be available at: **http://localhost:8000**
-
-✅ API Documentation: **http://localhost:8000/docs**
-
-#### 2. Start the Frontend (Terminal 2)
-
-Open a **new terminal** window:
-
-```bash
-# Navigate to frontend
-cd fe
-
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
-```
-
-✅ Frontend will be available at: **http://localhost:3000**
-
-### 🎯 Using the Application
-
-1. Open **http://localhost:3000** in your browser
-2. Allow camera access when prompted
-3. Position yourself so your **full body is visible** in the frame
-4. Hold still - scanning starts **automatically** when pose is detected
-5. Wait **3 seconds** for the scan to complete
-6. View your personalized results:
-   - 📏 Body measurements and composition
-   - 💪 Strong spots and areas for improvement
-   - 🍽️ Custom diet plan with macros and meals
-   - 🏋️ Personalized 7-day workout routine
-
-### ✅ Verify Installation
-
-**Check Backend:**
-```bash
-curl http://localhost:8000/health
-# Should return: {"status":"healthy","message":"Backend is running smoothly"}
-```
-
-**Check Frontend:**
-Open http://localhost:3000 - you should see the camera interface
-
-**Explore API:**
-Visit http://localhost:8000/docs for interactive API documentation
-
-## 📚 Documentation
-
-- **Backend Documentation**: [be/README.md](be/README.md)
-- **Frontend Documentation**: [fe/README.md](fe/README.md)
-
-## 🎯 Features
-
-### Body Analysis
-- Real-time pose detection using MediaPipe
-- Detailed body measurements (shoulders, chest, waist, hips, arms, legs)
-- Body composition estimates (body fat %, muscle mass %)
-- Proportion analysis and symmetry checks
-- Identification of strong spots and areas for improvement
-
-### Personalized Diet Plan
-- Calorie calculation based on body composition
-- Macro breakdown (protein, carbs, fats)
-- Sample meal plan with 6 meals per day
-- Adjustments for different body fat percentages
-
-### Custom Workout Routine
-- 7-day workout program
-- Training focus based on weak spots
-- Detailed exercise prescriptions with sets and reps
-- Push/Pull/Legs split with recovery days
-
-## 🔧 API Endpoints
-
-### Backend API (http://localhost:8000)
-
-- `GET /` - Health check
-- `GET /health` - Detailed health status
-- `POST /api/analyze` - Analyze body from pose landmarks
-- `POST /api/diet-plan` - Generate personalized diet plan
-- `POST /api/workout-routine` - Generate workout routine
-- `POST /api/analyze-complete` - Complete analysis (all in one)
-
-Full API documentation available at http://localhost:8000/docs
-
-## 🛠️ Technology Stack
-
-### Backend
-- **FastAPI**: Modern Python web framework
-- **Pydantic**: Data validation
-- **Uvicorn**: ASGI server
-- **Python 3.8+**: Core language
-
-### Frontend
-- **Next.js 13**: React framework
-- **React 18**: UI library
-- **TypeScript**: Type safety
-- **MediaPipe**: Pose detection
-- **Styled JSX**: Component styling
-
-## 📦 Project Files
-
-### Backend (`be/`)
-```
-be/
-├── main.py              # FastAPI application & endpoints
-├── body_analysis.py     # Body analysis algorithms
-├── body_scanner.py      # Pose processing utilities
-├── config.py            # Configuration settings
-├── requirements.txt     # Python dependencies
-├── .gitignore          # Git ignore rules
-└── README.md           # Backend documentation
-```
-
-### Frontend (`fe/`)
-```
-fe/
-├── app/
-│   ├── layout.tsx      # Root layout
-│   └── page.tsx        # Home page
-├── components/
-│   └── BodyScanCamera.tsx  # Main camera component
-├── lib/
-│   ├── bodyScanner.ts  # MediaPipe integration
-│   └── bodyAnalysis.ts # Type definitions
-├── styles/
-│   └── globals.css     # Global styles
-├── package.json        # Node dependencies
-├── tsconfig.json       # TypeScript config
-├── next.config.js      # Next.js config
-└── README.md          # Frontend documentation
-```
-
-## 🔐 Environment Variables
-
-### Backend (`be/.env`)
-```env
-HOST=0.0.0.0
-PORT=8000
-RELOAD=true
-LOG_LEVEL=info
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
-```
-
-### Frontend (`fe/.env.local`)
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-## 🐛 Troubleshooting
-
-### Backend Issues
-
-**Python version check**
-```bash
-python --version  # Should be 3.8 or higher
-```
-
-**Port 8000 already in use**
-```bash
-# Find and kill process using port 8000 (Windows)
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-
-# Or change port in be/main.py:
-uvicorn.run("main:app", host="0.0.0.0", port=8001, ...)
-```
-
-**Import errors / Module not found**
-```bash
-cd be
-# Make sure virtual environment is activated
-pip install -r requirements.txt
-```
-
-**Virtual environment issues**
-```bash
-# Delete and recreate
-cd be
-rm -rf venv  # Windows: rmdir /s venv
-python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/macOS
-pip install -r requirements.txt
-```
-
-### Frontend Issues
-
-**Node version check**
-```bash
-node --version  # Should be 12.22.9 or higher
-npm --version
-```
-
-**Backend connection failed**
-- ✅ Ensure Python backend is **running** at http://localhost:8000
-- ✅ Check `fe/.env.local` exists with: `NEXT_PUBLIC_API_URL=http://localhost:8000`
-- ✅ Test backend: `curl http://localhost:8000/health`
-- ✅ Check browser console for CORS errors
-
-**Port 3000 already in use**
-```bash
-# Next.js will automatically try port 3001
-# Or manually kill the process (Windows)
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
-```
-
-**Camera not working**
-- ✅ Grant browser camera permissions (click lock icon in address bar)
-- ✅ Check if camera is in use by another app (Zoom, Teams, etc.)
-- ✅ Try Chrome or Edge browsers (best MediaPipe support)
-- ✅ Check browser console for specific errors
-- ✅ Test camera in another app to ensure it's working
-
-**npm install fails**
-```bash
-cd fe
-# Clear cache and reinstall
-rm -rf node_modules package-lock.json  # Windows: rmdir /s node_modules, del package-lock.json
-npm cache clean --force
-npm install
-```
-
-**"Module not found" errors in frontend**
-```bash
-cd fe
-npm install
-# Restart the dev server
-```
-
-### Common Issues
-
-**Both servers seem to start but nothing happens**
-- Wait 5-10 seconds after starting for servers to fully initialize
-- Check if backend shows "Application startup complete" message
-- Check if frontend shows "Ready" or "Compiled" message
-
-**Analysis fails after scanning**
-- Ensure backend is running (most common issue!)
-- Check browser console for error messages
-- Verify backend logs for errors
-- Try scanning again with better lighting and full body visible
-
-**Slow performance**
-- Close other camera-using applications
-- Use a modern browser (Chrome/Edge recommended)
-- Ensure good lighting for better pose detection
-- Make sure your full body is visible in frame
-
-## 📝 Development
-
-### Running Tests
-
-Backend:
-```bash
-cd be
-pytest
-```
-
-Frontend:
-```bash
-cd fe
-npm test
-```
-
-### Code Formatting
-
-Backend:
-```bash
-cd be
-black .
-```
-
-Frontend:
-```bash
-cd fe
-npm run lint
-```
-
-## 🚀 Deployment
-
-### Backend
-```bash
-cd be
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-### Frontend
-```bash
-cd fe
-npm run build
-npm run start
-```
-
-## 📄 License
-
-MIT
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📧 Support
-
-For issues and questions, please open an issue on the GitHub repository.
+BodyApp is the fastest body analysis app - designed to track your fitness progression with minimal user effort. Just stand in front of your camera, and get instant AI-powered insights about your physique.
 
 ---
 
-**Built with ❤️ using Python FastAPI and Next.js**
+## Quick Start
 
+### Prerequisites
+- Node.js 16+ and npm
+- Python 3.8+
+- Modern browser with camera access
+
+### Installation
+
+1. **Install dependencies:**
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Install frontend dependencies
+cd fe
+npm install
+```
+
+2. **Start the backend:**
+```bash
+cd be
+python main.py
+```
+Backend runs on `http://localhost:8000`
+
+3. **Start the frontend:**
+```bash
+cd fe
+npm run dev
+```
+Frontend runs on `http://localhost:3000`
+
+4. **Open the app:**
+Navigate to `http://localhost:3000` and allow camera access.
+
+---
+
+## How It Works
+
+### Complete User Flow (60-90 seconds)
+
+1. **Onboarding** (10s)
+   - Select gender (Male/Female/Non-binary)
+   - Optionally enter height for better calibration
+   - That's it!
+
+2. **Front Pose Capture** (15-20s)
+   - AI-guided pose detection with real-time readiness scoring
+   - Auto-captures when pose is perfect (or click to capture manually)
+   - Visual skeleton overlay shows body detection
+
+3. **Side Pose Capture** (15-20s)
+   - Turn 90° to your right
+   - Same guided capture process
+   - Auto-capture after 2 seconds of stable pose
+
+4. **Analysis** (2-5s)
+   - AI analyzes your physique
+   - Calculates scores across 7 categories
+   - Generates personalized insights
+
+5. **Results** (15-20s to read)
+   - Overall physique score (0-100) with grade
+   - Your top 3 strengths
+   - Your top 3 growth opportunities
+   - Personalized diet plan
+   - Custom workout routine
+   - Progress tracking vs baseline
+
+---
+
+## Features
+
+### ✅ Implemented (MVP)
+
+- **Beautiful onboarding** - Minimal friction, 2 questions max
+- **Smart auto-capture** - No need to run back and forth
+- **Real-time pose guidance** - Know before you capture if pose is good
+- **Male physique scoring** - 0-100 ratings across 7 categories
+- **Baseline & progression tracking** - Automatic comparison to first scan
+- **Clean, motivating UI** - No negative language, confidence-building
+- **Database persistence** - All scans saved with SQLite
+
+### Scoring Categories (Male)
+
+1. **Shoulders** (20% weight) - Width relative to hips
+2. **V-Taper** (18% weight) - Shoulder-to-waist ratio
+3. **Chest** (15% weight) - Development estimate
+4. **Core** (15% weight) - Waist tightness
+5. **Symmetry** (12% weight) - Left-right balance
+6. **Posture** (10% weight) - Alignment from side view
+7. **Arms** (10% weight) - Proportions to body
+
+### ⏳ Coming Soon
+
+- Female-specific scoring algorithm
+- Non-binary physique analysis
+- Trend graphs (score over time)
+- Photo comparison (side-by-side progress)
+- Mobile apps (iOS & Android)
+- LLaVA integration for qualitative assessment
+
+---
+
+## Tech Stack
+
+### Frontend
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Type safety
+- **MediaPipe** - Real-time pose detection
+- **Styled JSX** - Component-scoped styling
+
+### Backend
+- **FastAPI** - Modern Python web framework
+- **SQLite** - Database (PostgreSQL for production)
+- **Pydantic** - Data validation
+- **Uvicorn** - ASGI server
+
+### AI/ML
+- **MediaPipe Pose** - 33-point skeleton tracking
+- **Custom scoring algorithm** - Research-backed anthropometric ratios
+
+---
+
+## Project Structure
+
+```
+bodyapp/
+├── be/                     # Backend
+│   ├── api/                # API routers
+│   │   └── physique.py     # Physique analysis endpoint
+│   ├── services/           # Business logic
+│   │   └── scoring.py      # Scoring algorithms
+│   ├── database/           # Database layer
+│   │   └── connection.py   # SQLite connection & queries
+│   ├── models/             # Data models (future)
+│   ├── utils/              # Utilities (future)
+│   ├── tests/              # Tests (future)
+│   ├── config.py           # Configuration
+│   ├── body_analysis.py    # Legacy diet/workout generation
+│   ├── body_scanner.py     # Pose validation utilities
+│   └── main.py             # App initialization (50 lines)
+│
+├── fe/                     # Frontend
+│   ├── app/                # Next.js App Router
+│   │   └── page.tsx        # Main app orchestrator
+│   ├── components/         # React components
+│   │   ├── Onboarding.tsx      # 3-screen onboarding
+│   │   ├── TwoPoseCapture.tsx  # 2-pose capture with auto-capture
+│   │   └── PhysiqueResults.tsx # Clean results display
+│   └── lib/                # Utilities
+│       └── bodyScanner.ts  # MediaPipe wrapper
+│
+├── requirements.txt        # Python dependencies
+├── .cursorrules            # Development rules (strict)
+├── .gitignore              # Git ignore rules
+├── start.bat / start.sh    # Quick start scripts
+└── README.md               # This file (ONLY markdown allowed)
+```
+
+---
+
+## Development Philosophy
+
+### Code Organization Rules (STRICT)
+
+1. **Maximum 1000 lines per file**
+   - If ANY file exceeds 1000 lines, STOP and refactor immediately
+   - Split into smaller, focused modules
+   - No exceptions
+
+2. **Only README.md for documentation**
+   - This is the ONLY markdown file in the project
+   - All documentation goes here
+   - Updates must be in this file, not new files
+
+3. **Clean root folder**
+   - Only: README.md, requirements.txt, .gitignore, .cursorrules, start scripts
+   - Everything else in proper subfolders
+
+4. **Backend structure**
+   - `api/` for all endpoints (routers)
+   - `services/` for business logic
+   - `models/` for data models
+   - `database/` for database operations
+   - `utils/` for utilities
+   - `main.py` ONLY for app init (< 200 lines)
+
+5. **Modularity over monoliths**
+   - Prefer many small files over few large files
+   - Each file has a single, clear responsibility
+   - Refactor before it's too late
+
+See `.cursorrules` for complete development rules.
+
+---
+
+## API Endpoints
+
+### Health Check
+```
+GET /
+GET /health
+```
+
+### Physique Analysis
+```
+POST /api/analyze-physique
+```
+
+**Request:**
+```json
+{
+  "frontPose": [{ "x": 0.5, "y": 0.5, "z": 0, "visibility": 0.9 }, ...],
+  "sidePose": [{ "x": 0.5, "y": 0.5, "z": 0, "visibility": 0.9 }, ...],
+  "gender": "male",
+  "height": 175  // optional, in cm
+}
+```
+
+**Response:**
+```json
+{
+  "physique": {
+    "overall_score": 72,
+    "scores": { "shoulders": 85, "core": 62, ... },
+    "body_type": "Athletic",
+    "frame": "Athletic Frame",
+    "strong_areas": [...],
+    "growth_areas": [...],
+    "key_insight": "..."
+  },
+  "dietPlan": { "calories": 2300, "protein": 172, ... },
+  "workoutRoutine": { "focus": "...", "days": [...] }
+}
+```
+
+---
+
+## Database Schema
+
+### Tables
+
+**users**
+- `user_id` (PK) - User identifier
+- `gender` - Male/Female/Non-binary
+- `height_cm` - Optional height for calibration
+- `created_at`, `updated_at` - Timestamps
+
+**scans**
+- `scan_id` (PK) - Scan identifier
+- `user_id` (FK) - User reference
+- `scan_date` - When scan was taken
+- `is_baseline` - First scan flag
+- `front_pose_data`, `side_pose_data` - JSON landmarks
+- `overall_score` - 0-100 score
+- `scores_json` - All category scores
+- `body_type`, `frame` - Classifications
+- `strong_areas_json`, `growth_areas_json` - Top 3 each
+- `key_insight` - Personalized message
+
+**baseline_metrics**
+- `baseline_id` (PK)
+- `user_id` (FK) - User reference
+- `baseline_scan_id` (FK) - Reference to baseline scan
+- `shoulder_hip_ratio`, `waist_shoulder_ratio`, `arm_leg_ratio` - Body proportions
+- `shoulder_width_normalized`, `hip_width_normalized` - Normalized measurements
+
+**progression**
+- `progression_id` (PK)
+- `user_id` (FK)
+- `scan_id` (FK)
+- `days_since_baseline` - Days since first scan
+- `overall_score_delta`, `shoulder_score_delta`, etc. - Score changes
+- `notes` - Optional notes
+
+---
+
+## Testing
+
+### Manual Testing Checklist
+
+**Onboarding:**
+- [ ] Welcome screen loads
+- [ ] Gender selection works
+- [ ] Height input (optional) works
+- [ ] Skip button works
+
+**Pose Capture:**
+- [ ] Camera initializes
+- [ ] Skeleton overlay appears on body
+- [ ] Readiness score updates in real-time
+- [ ] Auto-capture triggers after 2s of stable pose
+- [ ] Manual capture button works
+- [ ] Front → Side transition works
+
+**Results:**
+- [ ] Analysis completes in < 5 seconds
+- [ ] Overall score displays (0-100)
+- [ ] Grade shows (S/A/B/C/D)
+- [ ] Strong areas list (top 3)
+- [ ] Growth areas list (top 3)
+- [ ] Diet plan shows
+- [ ] Workout plan shows
+- [ ] "Scan Again" button works
+
+**Database:**
+- [ ] First scan marked as baseline
+- [ ] Second scan shows progression
+- [ ] Data persists between restarts
+
+### Automated Tests (Coming Soon)
+- Unit tests for scoring algorithms
+- Integration tests for API endpoints
+- E2E tests for complete user flow
+
+---
+
+## Troubleshooting
+
+### Camera Not Working
+**Issue:** Black screen or "Camera access denied"  
+**Fix:** 
+1. Grant camera permissions in browser
+2. Ensure no other app is using camera
+3. Try Chrome (best MediaPipe support)
+
+### Backend Connection Error
+**Issue:** "Analysis failed: Failed to fetch"  
+**Fix:**
+1. Verify backend running on `http://localhost:8000`
+2. Check CORS settings in `be/config.py`
+3. Refresh frontend page
+
+### Skeleton Not Appearing
+**Issue:** Camera works but no skeleton overlay  
+**Fix:**
+1. Step back 6-8 feet to show full body
+2. Ensure good lighting
+3. Try plain background
+4. Check browser console for MediaPipe errors
+
+### Readiness Always Low
+**Issue:** Readiness bar stuck at < 50%  
+**Fix:**
+1. Show full body (head to feet) in frame
+2. Face camera directly
+3. Improve lighting
+4. Stand against plain background
+
+### Wrong Error in Terminal
+**Issue:** You mentioned getting an error - what was it?  
+**Action:** Please share the exact error message so I can fix it
+
+---
+
+## Known Limitations (MVP)
+
+1. **Single demo user per gender** - Uses `demo_user_male` for all male users
+2. **No authentication** - Production needs proper user accounts
+3. **Female/non-binary incomplete** - Returns placeholder responses
+4. **Camera distance affects measurements** - Mitigated by height calibration & ratios
+5. **SQLite for MVP** - Will migrate to PostgreSQL for production
+
+---
+
+## Roadmap
+
+### Phase 1: MVP (✅ Complete)
+- [x] Onboarding flow
+- [x] 2-pose capture with auto-capture
+- [x] Male physique scoring
+- [x] Results display
+- [x] Database persistence
+- [x] Baseline & progression tracking
+
+### Phase 2: Enhanced Features
+- [ ] Female physique scoring
+- [ ] Non-binary analysis
+- [ ] Trend graphs over time
+- [ ] Photo storage & comparison
+- [ ] Export data (CSV, PDF)
+
+### Phase 3: Production Ready
+- [ ] User authentication
+- [ ] PostgreSQL database
+- [ ] Error monitoring (Sentry)
+- [ ] Analytics (Mixpanel/Amplitude)
+- [ ] Privacy policy & terms
+- [ ] GDPR compliance
+
+### Phase 4: Mobile & Advanced
+- [ ] React Native mobile apps
+- [ ] LLaVA qualitative assessment
+- [ ] Social features (optional sharing)
+- [ ] Trainer/coach portal
+- [ ] Integration with Apple Health/Google Fit
+
+---
+
+## Contributing
+
+### Development Workflow
+
+1. Check `.cursorrules` for code standards
+2. No file should exceed 1000 lines
+3. All documentation goes in this README.md
+4. Test locally before committing
+5. Follow folder structure strictly
+
+### Adding New Features
+
+1. **API endpoints** → `be/api/` folder
+2. **Business logic** → `be/services/` folder
+3. **Database operations** → `be/database/` folder
+4. **React components** → `fe/components/` folder
+5. **Update this README** with new features
+
+---
+
+## License
+
+Proprietary - All rights reserved
+
+---
+
+## Contact & Support
+
+For questions, issues, or feedback:
+- Open an issue on GitHub
+- Contact: [Your contact info]
+
+---
+
+**Built with ❤️ for fitness enthusiasts who value their time.**
+
+*Less than 90 seconds a day. No excuses.*
