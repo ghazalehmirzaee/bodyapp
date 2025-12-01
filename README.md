@@ -82,6 +82,7 @@ Navigate to `http://localhost:3000` and allow camera access.
 
 ### ✅ Implemented (MVP)
 
+**Web App:**
 - **Beautiful onboarding** - Minimal friction, 2 questions max
 - **Smart auto-capture** - No need to run back and forth
 - **Real-time pose guidance** - Know before you capture if pose is good
@@ -89,6 +90,13 @@ Navigate to `http://localhost:3000` and allow camera access.
 - **Baseline & progression tracking** - Automatic comparison to first scan
 - **Clean, motivating UI** - No negative language, confidence-building
 - **Database persistence** - All scans saved with SQLite
+
+**Mobile App (React Native):** ⭐ NEW
+- **Complete onboarding flow** - Welcome → Gender → Height → Age
+- **Beautiful dark theme** - Pine green on black, consistent with brand
+- **Input validation** - Smart Continue button states
+- **Results screen** - Shows overall score with mock data
+- **Camera placeholder** - Explains upcoming body scanning feature
 
 ### Scoring Categories (Male)
 
@@ -102,12 +110,23 @@ Navigate to `http://localhost:3000` and allow camera access.
 
 ### ⏳ Coming Soon
 
+**Immediate (This Week):**
+- Mobile camera integration with real pose detection
+- Mobile backend API connection for real analysis
 - Female-specific scoring algorithm
 - Non-binary physique analysis
-- Trend graphs (score over time)
-- Photo comparison (side-by-side progress)
-- Mobile apps (iOS & Android)
-- LLaVA integration for qualitative assessment
+
+**Near-term (This Month):**
+- Gamification system (streaks, leagues, competition)
+- Character/avatar system based on body scan
+- Basic workout & food logging
+- Progress tracking with graphs
+
+**Long-term (See PRODUCT_VISION.md):**
+- 25+ improvement vectors (sleep, mewing, flexibility, etc.)
+- AI coaching agent for personalized programs
+- Photo-based food logging
+- Advanced social features
 
 ---
 
@@ -135,7 +154,7 @@ Navigate to `http://localhost:3000` and allow camera access.
 
 ```
 bodyapp/
-├── be/                     # Backend
+├── be/                     # Backend (FastAPI)
 │   ├── api/                # API routers
 │   │   └── physique.py     # Physique analysis endpoint
 │   ├── services/           # Business logic
@@ -150,7 +169,7 @@ bodyapp/
 │   ├── body_scanner.py     # Pose validation utilities
 │   └── main.py             # App initialization (50 lines)
 │
-├── fe/                     # Frontend
+├── fe/                     # Frontend (Next.js Web App)
 │   ├── app/                # Next.js App Router
 │   │   └── page.tsx        # Main app orchestrator
 │   ├── components/         # React components
@@ -160,6 +179,16 @@ bodyapp/
 │   └── lib/                # Utilities
 │       └── bodyScanner.ts  # MediaPipe wrapper
 │
+├── BodyAppFinal/           # Mobile App (React Native) ⭐ NEW
+│   ├── App.tsx             # Main app with all screens
+│   ├── android/            # Android native code
+│   ├── ios/                # iOS native code
+│   ├── package.json        # Dependencies
+│   ├── README.md           # Mobile-specific docs
+│   ├── SCREENS_FLOW.md     # Screen flow visualization
+│   └── NEXT_STEPS.md       # Implementation guide
+│
+├── PRODUCT_VISION.md       # Complete feature roadmap & ideas ⭐ NEW
 ├── requirements.txt        # Python dependencies
 ├── .cursorrules            # Development rules (strict)
 ├── .gitignore              # Git ignore rules
@@ -399,7 +428,11 @@ POST /api/analyze-physique
 - [ ] GDPR compliance
 
 ### Phase 4: Mobile & Advanced
-- [ ] React Native mobile apps
+- [x] React Native mobile app (iOS & Android) - **IN PROGRESS**
+  - [x] Onboarding flow (Welcome → Gender → Height → Age)
+  - [x] Results display with mock data
+  - [ ] Camera integration with real pose detection
+  - [ ] Backend API connection
 - [ ] LLaVA qualitative assessment
 - [ ] Social features (optional sharing)
 - [ ] Trainer/coach portal
