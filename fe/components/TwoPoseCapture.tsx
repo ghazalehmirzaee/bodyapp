@@ -4,19 +4,15 @@ import { useEffect, useRef, useState } from 'react';
 import { BodyScanner, PoseLandmarks } from '@/lib/bodyScanner';
 
 interface TwoPoseCaptureProps {
-  gender: string;
-  height?: number;
   onComplete: (data: {
     frontPose: PoseLandmarks[];
     sidePose: PoseLandmarks[];
-    gender: string;
-    height?: number;
   }) => void;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export default function TwoPoseCapture({ gender, height, onComplete }: TwoPoseCaptureProps) {
+export default function TwoPoseCapture({ onComplete }: TwoPoseCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scannerRef = useRef<BodyScanner | null>(null);
@@ -261,8 +257,6 @@ export default function TwoPoseCapture({ gender, height, onComplete }: TwoPoseCa
       onComplete({
         frontPose: frontPose!,
         sidePose: landmarks,
-        gender,
-        height,
       });
     }
   };

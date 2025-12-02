@@ -1,0 +1,33 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Black background -->
+  <rect width="512" height="512" fill="#000000"/>
+  
+  <!-- Pine green circle -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#2E7D32" stroke-width="24"/>
+  
+  <!-- Letter U in pine green -->
+  <text 
+    x="256" 
+    y="340" 
+    font-family="Arial, Helvetica, sans-serif" 
+    font-size="280" 
+    font-weight="bold" 
+    fill="#2E7D32" 
+    text-anchor="middle">U</text>
+</svg>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

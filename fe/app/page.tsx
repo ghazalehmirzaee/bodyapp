@@ -4,7 +4,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { PoseLandmarks } from '@/lib/bodyScanner';
 
-const Onboarding = dynamic(() => import('@/components/Onboarding'), {
+const OnboardingNew = dynamic(() => import('@/components/OnboardingNew'), {
   ssr: false,
 });
 
@@ -23,7 +23,8 @@ type AppState = 'onboarding' | 'scanning' | 'analyzing' | 'results';
 
 interface UserData {
   gender: string;
-  height?: number;
+  height: string;
+  age: string;
 }
 
 export default function Home() {
@@ -34,7 +35,7 @@ export default function Home() {
   const [workoutRoutine, setWorkoutRoutine] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleOnboardingComplete = (data: { gender: string; height?: number }) => {
+  const handleOnboardingComplete = (data: { gender: string; height: string; age: string }) => {
     setUserData(data);
     setAppState('scanning');
   };
@@ -42,8 +43,6 @@ export default function Home() {
   const handleCaptureComplete = async (data: {
     frontPose: PoseLandmarks[];
     sidePose: PoseLandmarks[];
-    gender: string;
-    height?: number;
   }) => {
     setAppState('analyzing');
     setError(null);
@@ -67,8 +66,8 @@ export default function Home() {
             z: lm.z,
             visibility: lm.visibility,
           })),
-          gender: data.gender,
-          height: data.height,
+          gender: userData?.gender || 'male',
+          height: userData?.height ? parseInt(userData.height) : undefined,
         }),
       });
 
@@ -98,13 +97,11 @@ export default function Home() {
   return (
     <main>
       {appState === 'onboarding' && (
-        <Onboarding onComplete={handleOnboardingComplete} />
+        <OnboardingNew onComplete={handleOnboardingComplete} />
       )}
 
       {appState === 'scanning' && userData && (
         <TwoPoseCapture
-          gender={userData.gender}
-          height={userData.height}
           onComplete={handleCaptureComplete}
         />
       )}

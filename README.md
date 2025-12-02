@@ -91,12 +91,21 @@ Navigate to `http://localhost:3000` and allow camera access.
 - **Clean, motivating UI** - No negative language, confidence-building
 - **Database persistence** - All scans saved with SQLite
 
-**Mobile App (React Native):** ⭐ NEW
-- **Complete onboarding flow** - Welcome → Gender → Height → Age
-- **Beautiful dark theme** - Pine green on black, consistent with brand
-- **Input validation** - Smart Continue button states
-- **Results screen** - Shows overall score with mock data
-- **Camera placeholder** - Explains upcoming body scanning feature
+**Mobile App (React Native - Android):** ⭐ NEW
+- **Complete onboarding flow** - Welcome → Gender → Height (cm/feet toggle) → Age
+- **Beautiful dark theme** - Pine green (#2E7D32) on pure black (#000000)
+- **Input validation** - Smart Continue button states, real-time feedback
+- **Camera integration** - Real-time camera with pose detection feedback
+- **Camera controls** - Front/back camera toggle, manual capture, gallery upload (UI ready)
+- **No splash screen issues** - Clean black loading screen
+- **Instant camera launch** - No countdown, immediate access
+
+**Web App (Next.js):** ⭐ UPDATED
+- **Matching mobile UI** - Identical onboarding flow and design
+- **Dark theme throughout** - Same color scheme as mobile
+- **Unit toggles** - cm/feet switcher on height page
+- **Responsive design** - Works on desktop and mobile browsers
+- **Ready for deployment** - All features ported from mobile
 
 ### Scoring Categories (Male)
 
@@ -169,29 +178,30 @@ bodyapp/
 │   ├── body_scanner.py     # Pose validation utilities
 │   └── main.py             # App initialization (50 lines)
 │
-├── fe/                     # Frontend (Next.js Web App)
+├── fe/                     # Frontend Web App (Next.js) ⭐ UPDATED
 │   ├── app/                # Next.js App Router
 │   │   └── page.tsx        # Main app orchestrator
 │   ├── components/         # React components
-│   │   ├── Onboarding.tsx      # 3-screen onboarding
+│   │   ├── OnboardingNew.tsx   # Modern onboarding flow (Welcome→Gender→Height→Age)
 │   │   ├── TwoPoseCapture.tsx  # 2-pose capture with auto-capture
 │   │   └── PhysiqueResults.tsx # Clean results display
-│   └── lib/                # Utilities
-│       └── bodyScanner.ts  # MediaPipe wrapper
+│   ├── lib/                # Utilities
+│   │   └── bodyScanner.ts  # MediaPipe wrapper
+│   └── styles/             # Styling
+│       └── globals.css     # Global styles (black + green theme)
 │
-├── BodyAppFinal/           # Mobile App (React Native) ⭐ NEW
-│   ├── App.tsx             # Main app with all screens
-│   ├── android/            # Android native code
-│   ├── ios/                # iOS native code
-│   ├── package.json        # Dependencies
-│   ├── README.md           # Mobile-specific docs
-│   ├── SCREENS_FLOW.md     # Screen flow visualization
-│   └── NEXT_STEPS.md       # Implementation guide
+├── BodyAppFinal/           # Android Mobile App (React Native) ⭐ NEW
+│   ├── App.tsx             # Main app with complete onboarding flow
+│   ├── src/                # Source code
+│   │   └── components/     # React components (CameraScanner)
+│   ├── android/            # Android native code & build files
+│   ├── ios/                # iOS native code (future)
+│   └── package.json        # Dependencies
 │
-├── PRODUCT_VISION.md       # Complete feature roadmap & ideas ⭐ NEW
 ├── requirements.txt        # Python dependencies
 ├── .cursorrules            # Development rules (strict)
 ├── .gitignore              # Git ignore rules
+├── .terminal_health_check  # Auto terminal health monitoring
 ├── start.bat / start.sh    # Quick start scripts
 └── README.md               # This file (ONLY markdown allowed)
 ```
