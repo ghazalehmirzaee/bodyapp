@@ -88,3 +88,4 @@ echo - Add it again from the app drawer
 echo - OR restart your phone to fully clear launcher cache
 echo.
 pause
+

@@ -168,3 +168,4 @@ To properly test icon changes:
 ❌ Using hard-coded vector drawables for icons
 ❌ Not testing on actual device (emulator may behave differently)
 ❌ Assuming "rebuild" is enough (it's not for icons!)
+
