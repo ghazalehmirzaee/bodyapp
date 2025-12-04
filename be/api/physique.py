@@ -45,17 +45,23 @@ async def analyze_physique(request: TwoPoseAnalyzeRequest):
         front_landmarks = [landmark.dict() for landmark in request.frontPose]
         side_landmarks = [landmark.dict() for landmark in request.sidePose]
         
+        print(f"[DEBUG] Received {len(front_landmarks)} front landmarks, {len(side_landmarks)} side landmarks")
+        print(f"[DEBUG] Gender: {request.gender}, Height: {request.height}")
+        
         # For MVP, use a simple user_id (in production, use proper auth)
         user_id = f"demo_user_{request.gender}"
         
         # Create user if doesn't exist
+        print(f"[DEBUG] Creating/checking user: {user_id}")
         db.create_user(user_id, request.gender, request.height)
         
         # Check if this is user's first scan (baseline)
         baseline_scan = db.get_baseline_scan(user_id)
         is_baseline = baseline_scan is None
+        print(f"[DEBUG] Is baseline: {is_baseline}")
         
         # Route to appropriate scoring function based on gender
+        print(f"[DEBUG] Scoring physique...")
         if request.gender == 'male':
             physique_analysis = score_male_physique(
                 front_landmarks,
@@ -77,7 +83,10 @@ async def analyze_physique(request: TwoPoseAnalyzeRequest):
         else:
             raise ValueError(f"Invalid gender: {request.gender}")
         
+        print(f"[DEBUG] Scoring complete. Overall score: {physique_analysis.get('overall_score')}")
+        
         # Save scan to database
+        print(f"[DEBUG] Saving scan to database...")
         scan_id = db.save_scan(
             user_id,
             front_landmarks,
@@ -85,6 +94,7 @@ async def analyze_physique(request: TwoPoseAnalyzeRequest):
             physique_analysis,
             is_baseline=is_baseline
         )
+        print(f"[DEBUG] Scan saved with ID: {scan_id}")
         
         # If this is the baseline scan, save baseline metrics
         if is_baseline:
@@ -129,7 +139,11 @@ async def analyze_physique(request: TwoPoseAnalyzeRequest):
             "workoutRoutine": workout
         }
     except ValueError as e:
+        print(f"[ERROR] ValueError: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        print(f"[ERROR] Exception: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Physique analysis failed: {str(e)}")
 

@@ -18,7 +18,8 @@ class Database:
     
     def init_database(self):
         """Initialize database tables"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=10.0)
+        conn.execute('PRAGMA journal_mode=WAL')  # Write-Ahead Logging for better concurrency
         cursor = conn.cursor()
         
         # Users table
@@ -108,7 +109,7 @@ class Database:
     def create_user(self, user_id: str, gender: str, height_cm: Optional[float] = None) -> bool:
         """Create a new user"""
         try:
-            conn = sqlite3.connect(self.db_path)
+            conn = sqlite3.connect(self.db_path, timeout=10.0)
             cursor = conn.cursor()
             now = datetime.now().isoformat()
             
@@ -132,39 +133,41 @@ class Database:
         is_baseline: bool = False
     ) -> Optional[int]:
         """Save a body scan"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        now = datetime.now().isoformat()
-        
-        cursor.execute("""
-            INSERT INTO scans (
-                user_id, scan_date, is_baseline,
-                front_pose_data, side_pose_data,
-                overall_score, scores_json,
-                body_type, frame,
-                strong_areas_json, growth_areas_json,
-                key_insight
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            user_id,
-            now,
-            1 if is_baseline else 0,
-            json.dumps(front_pose),
-            json.dumps(side_pose),
-            physique_analysis['overall_score'],
-            json.dumps(physique_analysis['scores']),
-            physique_analysis.get('body_type'),
-            physique_analysis.get('frame'),
-            json.dumps(physique_analysis.get('strong_areas', [])),
-            json.dumps(physique_analysis.get('growth_areas', [])),
-            physique_analysis.get('key_insight')
-        ))
-        
-        scan_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        
-        return scan_id
+        conn = sqlite3.connect(self.db_path, timeout=10.0)
+        try:
+            cursor = conn.cursor()
+            now = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO scans (
+                    user_id, scan_date, is_baseline,
+                    front_pose_data, side_pose_data,
+                    overall_score, scores_json,
+                    body_type, frame,
+                    strong_areas_json, growth_areas_json,
+                    key_insight
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                user_id,
+                now,
+                1 if is_baseline else 0,
+                json.dumps(front_pose),
+                json.dumps(side_pose),
+                physique_analysis['overall_score'],
+                json.dumps(physique_analysis['scores']),
+                physique_analysis.get('body_type'),
+                physique_analysis.get('frame'),
+                json.dumps(physique_analysis.get('strong_areas', [])),
+                json.dumps(physique_analysis.get('growth_areas', [])),
+                physique_analysis.get('key_insight')
+            ))
+            
+            scan_id = cursor.lastrowid
+            conn.commit()
+            
+            return scan_id
+        finally:
+            conn.close()
     
     def save_baseline_metrics(
         self,
@@ -211,7 +214,7 @@ class Database:
         waist_shoulder_ratio = (hip_width * 0.75) / shoulder_width if shoulder_width > 0 else 1.0
         arm_leg_ratio = arm_length / leg_length if leg_length > 0 else 1.0
         
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=10.0)
         cursor = conn.cursor()
         now = datetime.now().isoformat()
         
@@ -245,7 +248,7 @@ class Database:
         days_since_baseline: int
     ):
         """Save progression data comparing current scan to baseline"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=10.0)
         cursor = conn.cursor()
         now = datetime.now().isoformat()
         
@@ -281,7 +284,7 @@ class Database:
     
     def get_baseline_scan(self, user_id: str) -> Optional[Dict]:
         """Get user's baseline scan"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=10.0)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -300,7 +303,7 @@ class Database:
     
     def get_user_scans(self, user_id: str, limit: int = 10) -> List[Dict]:
         """Get user's recent scans"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=10.0)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -318,7 +321,7 @@ class Database:
     
     def get_progression_history(self, user_id: str) -> List[Dict]:
         """Get user's progression history"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=10.0)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         

@@ -1,0 +1,12 @@
+<svg width="192" height="192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#000000"/>
+  <circle cx="96" cy="80" r="20" fill="#2E7D32"/>
+  <circle cx="96" cy="110" r="8" fill="#2E7D32"/>
+  <ellipse cx="96" cy="140" rx="15" ry="20" fill="#2E7D32"/>
+  <line x1="70" y1="110" x2="50" y2="140" stroke="#2E7D32" stroke-width="6"/>
+  <line x1="122" y1="110" x2="142" y2="140" stroke="#2E7D32" stroke-width="6"/>
+  <line x1="80" y1="160" x2="70" y2="180" stroke="#2E7D32" stroke-width="6"/>
+  <line x1="112" y1="160" x2="122" y2="180" stroke="#2E7D32" stroke-width="6"/>
+  <text x="96" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2E7D32" text-anchor="middle">BodyApp</text>
+</svg>
+

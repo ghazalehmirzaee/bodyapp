@@ -35,6 +35,56 @@
   - Start scripts (start.sh, start.bat)
 - **EVERYTHING else** must be in proper subfolders
 
+### 4. NEVER CREATE MOCK COMPONENTS
+- **NEVER create mock/placeholder components or functions**
+- **ALWAYS implement real functionality**
+- If a library needs installation/setup, do that first
+- If something doesn't work, fix the root cause
+- Mock data for testing is OK, but mock UI components are FORBIDDEN
+
+### 5. Terminal Health Monitoring (CRITICAL - Prevents Shell Tool Breakage)
+- **Problem**: After ~3 hours of heavy shell usage, PowerShell processes accumulate and shell tool stops capturing output (PID -1 errors)
+- **Solution**: Agent must monitor and clean up terminal processes periodically
+
+#### Monitoring Rules:
+- **Check terminal health every 10-15 shell commands**
+- **Track last cleanup in `.terminal_health_check` file in project root**
+- **If last cleanup was >2 hours ago OR PowerShell process count >25, perform cleanup**
+
+#### Health Check Commands:
+```powershell
+# Check PowerShell process count
+(Get-Process powershell,pwsh -ErrorAction SilentlyContinue).Count
+
+# Check terminal state files
+(Get-ChildItem "$env:USERPROFILE\.cursor\projects\*\terminals\*.txt" -Recurse -ErrorAction SilentlyContinue).Count
+```
+
+#### Cleanup Process (when needed):
+```powershell
+# 1. Kill orphaned PowerShell processes without main windows
+Get-Process pwsh,powershell -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -eq ""} | Stop-Process -Force
+
+# 2. Clear terminal state files for this project only
+Remove-Item "$env:USERPROFILE\.cursor\projects\c-Users-peter-Github-bodyapp\terminals\*.txt" -Force -ErrorAction SilentlyContinue
+```
+
+#### After Cleanup:
+- Update `.terminal_health_check` file with current timestamp
+- Inform user: "🧹 Cleaned up terminal processes to prevent shell tool issues"
+- Continue with normal work
+
+#### Warning Signs:
+- If PowerShell process count >40: **URGENT cleanup needed**
+- If shell commands return PID -1: **Already broken, alert user to restart Cursor**
+- If output capture fails: **Alert user immediately**
+
+#### Implementation:
+- Agent checks `.terminal_health_check` file timestamp periodically
+- If file doesn't exist or timestamp >2 hours old, run cleanup
+- This is AUTOMATIC - no user intervention needed
+- Keeps development flowing without shell tool failures
+
 ## Backend Structure Rules
 
 ### Folder Organization

@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from api.physique import router as physique_router
+from api.pathway import router as pathway_router
 from config import settings
 
 
@@ -27,6 +28,7 @@ app.add_middleware(
 
 # Register routers
 app.include_router(physique_router)
+app.include_router(pathway_router, prefix="/api/pathway", tags=["pathway"])
 
 
 @app.get("/")
